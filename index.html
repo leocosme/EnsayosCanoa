@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#FFFFFF" />
+  <meta name="description" content="Calendario de Ensayos 2026 — Grupo Canoa y Grupo Nuevo Pacto" />
+  <title>Calendario de Ensayos 2026</title>
+
+  <!-- Tipografía Inter (con fallback a fuentes del sistema si no hay conexión) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ==========================================================================
+       CALENDARIO DE ENSAYOS 2026 — Hoja de estilos
+       Paleta oficial:
+         Festivos       #C62828   |  Grupo Canoa    #6C4AB6
+         Nuevo Pacto    #F4C430   |  Fondo          #FFFFFF
+         Texto ppal.    #1E1E1E   |  Texto secun.   #666666
+         Bordes         #EAEAEA
+       ========================================================================== */
+
+    :root {
+      --color-festivo:    #C62828;
+      --color-canoa:      #6C4AB6;
+      --color-pacto:      #F4C430;
+      --color-fondo:      #FFFFFF;
+      --color-texto:      #1E1E1E;
+      --color-texto-sec:  #666666;
+      --color-borde:      #EAEAEA;
+
+      --radio-celda: 14px;
+      --radio-tarjeta: 22px;
+      --sombra-suave: 0 1px 2px rgba(30, 30, 30, .04), 0 8px 24px rgba(30, 30, 30, .06);
+      --transicion: 220ms cubic-bezier(.4, 0, .2, 1);
+      --fuente: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* ---------- Reset básico ---------- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      font-family: var(--fuente);
+      background: var(--color-fondo);
+      color: var(--color-texto);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: clamp(16px, 4vw, 40px) clamp(12px, 4vw, 32px) 48px;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ---------- Contenedor principal ---------- */
+    .app {
+      width: 100%;
+      max-width: 480px;           /* Mobile first: columna cómoda para el pulgar */
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ==========================================================================
+       ENCABEZADO
+       ========================================================================== */
+    .encabezado { text-align: center; padding-top: 8px; }
+
+    .encabezado__titulo {
+      font-size: clamp(1.35rem, 5vw, 1.7rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .encabezado__anio {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--color-texto-sec);
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+
+    /* ---------- Barra de navegación de mes ---------- */
+    .nav-mes {
+      position: relative;         /* Ancla del selector de meses */
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .nav-mes__boton {
+      flex: 0 0 auto;
+      width: 46px;
+      height: 46px;              /* Área táctil ≥ 44px */
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--color-borde);
+      border-radius: 50%;
+      background: var(--color-fondo);
+      color: var(--color-texto);
+      font-size: 1.25rem;
+      font-weight: 800;          /* Flechas en negrita */
+      cursor: pointer;
+      transition: transform var(--transicion), box-shadow var(--transicion),
+                  opacity var(--transicion), border-color var(--transicion);
+    }
+
+    .nav-mes__boton:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: var(--sombra-suave);
+      border-color: #ddd;
+    }
+
+    .nav-mes__boton:active:not(:disabled) { transform: scale(.94); }
+
+    .nav-mes__boton:disabled { opacity: .25; cursor: default; }
+
+    /* El nombre del mes es un botón: al pulsarlo se despliega el selector */
+    .nav-mes__mes {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: clamp(1.15rem, 4.5vw, 1.35rem);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--color-texto);
+      padding: 8px 12px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background var(--transicion);
+    }
+
+    .nav-mes__mes:hover { background: #f6f6f6; }
+
+    .nav-mes__flecha {
+      font-size: .62em;
+      color: var(--color-texto-sec);
+      transition: transform var(--transicion);
+    }
+
+    .nav-mes__mes[aria-expanded="true"] .nav-mes__flecha { transform: rotate(180deg); }
+
+    /* ---------- Selector desplegable de meses ---------- */
+    .selector-meses {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-6px) scale(.97);
+      width: min(320px, 100%);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding: 12px;
+      background: var(--color-fondo);
+      border: 1px solid var(--color-borde);
+      border-radius: 18px;
+      box-shadow: 0 14px 40px rgba(30, 30, 30, .14);
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transicion), transform var(--transicion);
+    }
+
+    .selector-meses.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+
+    .selector-meses__opcion {
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: .84rem;
+      font-weight: 600;
+      color: var(--color-texto);
+      padding: 11px 4px;          /* Área táctil cómoda */
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background var(--transicion), color var(--transicion),
+                  transform var(--transicion);
+    }
+
+    .selector-meses__opcion:hover { background: #f6f6f6; }
+    .selector-meses__opcion:active { transform: scale(.94); }
+
+    /* Mes actualmente visible en el calendario */
+    .selector-meses__opcion.activo {
+      background: var(--color-texto);
+      color: #fff;
+    }
+
+    /* ==========================================================================
+       LEYENDA
+       ========================================================================== */
+    .leyenda {
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      padding: 12px 16px;
+      border: 1px solid var(--color-borde);
+      border-radius: 999px;
+      box-shadow: var(--sombra-suave);
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--color-texto-sec);
+    }
+
+    .leyenda__item { display: inline-flex; align-items: center; gap: 8px; }
+
+    .leyenda__punto {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      flex: 0 0 auto;
+    }
+
+    .leyenda__punto--canoa   { background: var(--color-canoa); }
+    .leyenda__punto--pacto   { background: var(--color-pacto); }
+    .leyenda__punto--festivo { background: var(--color-festivo); }
+
+    /* ==========================================================================
+       CALENDARIO
+       ========================================================================== */
+    .calendario {
+      border: 1px solid var(--color-borde);
+      border-radius: var(--radio-tarjeta);
+      box-shadow: var(--sombra-suave);
+      padding: clamp(12px, 3.5vw, 20px);
+      overflow: hidden;           /* Contiene la animación de deslizamiento */
+    }
+
+    /* Fila de nombres de los días (Lun → Dom) */
+    .calendario__dias-semana,
+    .calendario__grilla {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .calendario__dias-semana {
+      margin-bottom: 8px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--color-texto-sec);
+      text-align: center;
+    }
+
+    /* Animaciones de entrada al cambiar de mes */
+    @keyframes entrarDerecha {
+      from { opacity: 0; transform: translateX(26px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes entrarIzquierda {
+      from { opacity: 0; transform: translateX(-26px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .calendario__grilla.anim-derecha   { animation: entrarDerecha   260ms cubic-bezier(.4, 0, .2, 1); }
+    .calendario__grilla.anim-izquierda { animation: entrarIzquierda 260ms cubic-bezier(.4, 0, .2, 1); }
+
+    /* ---------- Celdas ---------- */
+    .dia {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      display: grid;
+      place-items: center;
+      font-size: clamp(.85rem, 3.6vw, 1rem);
+      font-weight: 500;
+      border-radius: var(--radio-celda);
+      user-select: none;
+      transition: background var(--transicion), transform var(--transicion),
+                  box-shadow var(--transicion);
+    }
+
+    .dia--vacio { visibility: hidden; }   /* Relleno antes del día 1 */
+
+    /* Día actual del dispositivo (solo si pertenece a 2026) */
+    .dia--hoy { box-shadow: inset 0 0 0 2px var(--color-borde); font-weight: 700; }
+
+    /* Festivo: fondo rojo, texto blanco. Siempre tiene prioridad.
+       Es pulsable: abre un modal informativo del festivo. */
+    .dia--festivo {
+      background: var(--color-festivo);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .dia--festivo:hover { transform: translateY(-2px); box-shadow: var(--sombra-suave); }
+    .dia--festivo:active { transform: scale(.92); }
+
+    /* Ensayo Grupo Canoa: morado, texto blanco */
+    .dia--canoa {
+      background: var(--color-canoa);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Ensayo Grupo Nuevo Pacto: amarillo, texto negro */
+    .dia--pacto {
+      background: var(--color-pacto);
+      color: var(--color-texto);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Interacción táctil / hover en días con ensayo */
+    .dia--canoa:hover, .dia--pacto:hover { transform: translateY(-2px); box-shadow: var(--sombra-suave); }
+    .dia--canoa:active, .dia--pacto:active { transform: scale(.92); }
+
+    /* Caso excepcional: festivo que además recibe ensayo (dos festivos seguidos).
+       Se mantiene rojo y se añade un punto con el color del grupo. */
+    .dia--festivo.dia--con-ensayo::after {
+      content: '';
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--punto-grupo, #fff);
+    }
+    .dia--festivo.dia--con-ensayo { cursor: pointer; }
+
+    /* ==========================================================================
+       PIE DE PÁGINA — logo sutil
+       ========================================================================== */
+    .pie {
+      display: flex;
+      justify-content: center;
+      padding-top: 8px;
+    }
+
+    .pie__logo {
+      height: 100px;
+      width: auto;
+      opacity: .3;                /* Muy sutil; se revela al pasar el cursor */
+      transition: opacity var(--transicion);
+    }
+
+    .pie__logo:hover { opacity: 1; }
+
+    /* ==========================================================================
+       MODAL
+       ========================================================================== */
+    .modal-fondo {
+      position: fixed;
+      inset: 0;
+      background: rgba(30, 30, 30, .45);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease;
+    }
+
+    .modal-fondo.visible { opacity: 1; pointer-events: auto; }
+
+    .modal {
+      width: 100%;
+      max-width: 340px;
+      background: var(--color-fondo);
+      border-radius: 26px;
+      padding: 32px 28px 28px;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(30, 30, 30, .22);
+      transform: translateY(22px) scale(.94);
+      opacity: 0;
+      transition: transform 300ms cubic-bezier(.34, 1.4, .5, 1), opacity 240ms ease;
+    }
+
+    .modal-fondo.visible .modal { transform: translateY(0) scale(1); opacity: 1; }
+
+    /* Franja superior de color según el grupo */
+    .modal::before {
+      content: '';
+      display: block;
+      width: 44px;
+      height: 5px;
+      border-radius: 999px;
+      margin: 0 auto 22px;
+      background: var(--color-acento, var(--color-borde));
+    }
+
+    .modal--canoa   { --color-acento: var(--color-canoa); }
+    .modal--pacto   { --color-acento: var(--color-pacto); }
+    .modal--festivo { --color-acento: var(--color-festivo); }
+
+    .modal__icono {
+      width: 84px;
+      height: 84px;
+      margin: 0 auto 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      font-size: 2.4rem;
+      background: color-mix(in srgb, var(--color-acento) 14%, white);
+    }
+
+    .modal__icono svg { width: 46px; height: 46px; }
+
+    .modal__titulo { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.01em; }
+
+    .modal__texto { margin-top: 8px; font-size: .92rem; color: var(--color-texto-sec); }
+
+    .modal__fecha {
+      margin-top: 14px;
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: .88rem;
+      font-weight: 700;
+      background: color-mix(in srgb, var(--color-acento) 12%, white);
+      color: var(--color-texto);
+    }
+
+    .modal__cerrar {
+      margin-top: 24px;
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 16px;
+      font-family: inherit;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      background: var(--color-acento);
+      transition: transform var(--transicion), filter var(--transicion);
+    }
+
+    /* En el modal amarillo el botón lleva texto oscuro para buen contraste */
+    .modal--pacto .modal__cerrar { color: var(--color-texto); }
+
+    .modal__cerrar:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .modal__cerrar:active { transform: scale(.97); }
+
+    /* ==========================================================================
+       RESPONSIVE — tablet y escritorio
+       ========================================================================== */
+    @media (min-width: 640px) {
+      .app { max-width: 560px; }
+      .calendario__dias-semana, .calendario__grilla { gap: 6px; }
+    }
+
+    @media (min-width: 1024px) {
+      .app { max-width: 640px; }
+      .dia { border-radius: 16px; }
+    }
+
+    /* Respeto por usuarios que prefieren menos movimiento */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+
+    <!-- ============================ ENCABEZADO ============================ -->
+    <header class="encabezado">
+      <h1 class="encabezado__titulo">Calendario de Ensayos</h1>
+      <span class="encabezado__anio">2026</span>
+
+      <nav class="nav-mes" aria-label="Navegación de meses">
+        <button id="btnAnterior" class="nav-mes__boton" aria-label="Mes anterior">←</button>
+
+        <!-- Al pulsar el mes se despliega la lista de los 12 meses -->
+        <button id="nombreMes" class="nav-mes__mes" aria-live="polite"
+                aria-expanded="false" aria-haspopup="listbox"
+                aria-label="Elegir mes">
+          <span id="nombreMesTexto">Enero</span>
+          <span class="nav-mes__flecha" aria-hidden="true">▼</span>
+        </button>
+
+        <button id="btnSiguiente" class="nav-mes__boton" aria-label="Mes siguiente">→</button>
+
+        <!-- Selector desplegable de meses -->
+        <div id="selectorMeses" class="selector-meses" role="listbox" aria-label="Meses de 2026"></div>
+      </nav>
+    </header>
+
+    <!-- ============================ CALENDARIO ============================ -->
+    <section class="calendario" aria-label="Calendario mensual">
+      <div class="calendario__dias-semana" aria-hidden="true">
+        <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span>
+        <span>Vie</span><span>Sáb</span><span>Dom</span>
+      </div>
+      <div id="grilla" class="calendario__grilla"></div>
+    </section>
+
+    <!-- ================== LEYENDA (al final del calendario) =============== -->
+    <section class="leyenda" aria-label="Leyenda de colores">
+      <span class="leyenda__item">
+        <span class="leyenda__punto leyenda__punto--canoa"></span> Grupo Canoa
+      </span>
+      <span class="leyenda__item">
+        <span class="leyenda__punto leyenda__punto--pacto"></span> Grupo Nuevo Pacto
+      </span>
+      <span class="leyenda__item">
+        <span class="leyenda__punto leyenda__punto--festivo"></span> Festivo
+      </span>
+    </section>
+
+    <!-- ============================ PIE / LOGO ============================ -->
+    <footer class="pie">
+      <img class="pie__logo" src="logo-secundario-azul.png"
+           alt="Logo" loading="lazy" />
+    </footer>
+  </main>
+
+  <!-- ============================== MODAL ================================ -->
+  <div id="modalFondo" class="modal-fondo" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <div id="modal" class="modal">
+      <div id="modalIcono" class="modal__icono"></div>
+      <h3 id="modalTitulo" class="modal__titulo"></h3>
+      <p id="modalTexto" class="modal__texto"></p>
+      <span id="modalFecha" class="modal__fecha"></span>
+      <button id="modalCerrar" class="modal__cerrar">Cerrar</button>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    /* =========================================================================
+       CALENDARIO DE ENSAYOS 2026 — Lógica de la aplicación
+       -------------------------------------------------------------------------
+       1. Festivos oficiales de Colombia 2026 (incluye traslados Ley Emiliani).
+       2. Generación programática de los lunes de ensayo desde el 6-jul-2026,
+          alternando NUEVO PACTO → CANOA hasta diciembre.
+          Regla de festivos: si un lunes es festivo, el turno pasa al siguiente
+          lunes hábil. Excepción: si hay DOS lunes festivos seguidos, el segundo
+          sí recibe la asignación del grupo que corresponde.
+       3. Renderizado del mes, navegación (solo 2026) y modales por grupo.
+       ========================================================================= */
+
+    const ANIO = 2026;
+
+    /* La app solo muestra los meses con programación: julio a diciembre. */
+    const MES_MINIMO = 6;   // 6 = Julio (índice 0-11)
+
+    const MESES = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+
+    const DIAS_SEMANA = [
+      'Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'
+    ];
+
+    /* ----------------------------------------------------------------------
+       FESTIVOS OFICIALES DE COLOMBIA — AÑO 2026
+       Fechas ya trasladadas al lunes cuando aplica la Ley Emiliani.
+       Formato de clave: 'M-D' (mes 1-12, día sin ceros).
+       ---------------------------------------------------------------------- */
+    const FESTIVOS_2026 = {
+      '1-1':   'Año Nuevo',
+      '1-12':  'Día de los Reyes Magos',
+      '3-23':  'Día de San José',
+      '4-2':   'Jueves Santo',
+      '4-3':   'Viernes Santo',
+      '5-1':   'Día del Trabajo',
+      '5-18':  'Ascensión del Señor',
+      '6-8':   'Corpus Christi',
+      '6-15':  'Sagrado Corazón de Jesús',
+      '6-29':  'San Pedro y San Pablo',
+      '7-20':  'Día de la Independencia',
+      '8-7':   'Batalla de Boyacá',
+      '8-17':  'Asunción de la Virgen',
+      '10-12': 'Día de la Raza',
+      '11-2':  'Día de Todos los Santos',
+      '11-16': 'Independencia de Cartagena',
+      '12-8':  'Inmaculada Concepción',
+      '12-25': 'Navidad'
+    };
+
+    /* Definición de los dos grupos y sus estilos asociados */
+    const GRUPOS = {
+      CANOA: {
+        id: 'canoa',
+        nombre: 'Grupo Canoa',
+        claseDia: 'dia--canoa',
+        claseModal: 'modal--canoa',
+        colorPunto: '#F4C430',                 // Punto visible sobre fondo rojo
+        icono: '🪘'                            // Tambor tipo conga (afro-latino)
+      },
+      PACTO: {
+        id: 'pacto',
+        nombre: 'Grupo Nuevo Pacto',
+        claseDia: 'dia--pacto',
+        claseModal: 'modal--pacto',
+        colorPunto: '#6C4AB6',
+        /* Guitarra acústica dibujada en SVG (cuerpo en forma de 8, boca
+           circular y clavijero clásico — nunca una guitarra eléctrica). */
+        icono: `
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- Mástil -->
+            <rect x="42.2" y="4.4" width="5.2" height="27" rx="2.2"
+                  transform="rotate(45 44.8 17.9)" fill="#8a5a2b"/>
+            <!-- Clavijero -->
+            <rect x="50.5" y="2.5" width="9" height="11" rx="3"
+                  transform="rotate(45 55 8)" fill="#5d3a1a"/>
+            <circle cx="53.2" cy="5.4" r="1.15" fill="#e9dcc5"/>
+            <circle cx="56.4" cy="8.6" r="1.15" fill="#e9dcc5"/>
+            <circle cx="58.6" cy="10.8" r="1.15" fill="#e9dcc5"/>
+            <!-- Cuerpo en forma de 8 (característico de la guitarra acústica) -->
+            <circle cx="20" cy="44" r="15.5" fill="#c98a3d"/>
+            <circle cx="31" cy="33" r="10.5" fill="#c98a3d"/>
+            <circle cx="20" cy="44" r="15.5" stroke="#8a5a2b" stroke-width="2"/>
+            <circle cx="31" cy="33" r="10.5" stroke="#8a5a2b" stroke-width="2"/>
+            <!-- Boca circular -->
+            <circle cx="25.5" cy="38.5" r="5.6" fill="#3c2412"/>
+            <circle cx="25.5" cy="38.5" r="5.6" stroke="#e9dcc5" stroke-width="1.4"/>
+            <!-- Puente -->
+            <rect x="12.5" y="47.5" width="10" height="3.4" rx="1.7"
+                  transform="rotate(-45 17.5 49.2)" fill="#5d3a1a"/>
+            <!-- Cuerdas -->
+            <path d="M16 50 L51 15" stroke="#f5efe0" stroke-width="1"/>
+            <path d="M18 52 L53 17" stroke="#f5efe0" stroke-width="1"/>
+          </svg>`
+      }
+    };
+
+    /* =========================================================================
+       UTILIDADES DE FECHA
+       ========================================================================= */
+
+    /** Devuelve la clave 'M-D' de un objeto Date (para consultar festivos). */
+    function claveDe(fecha) {
+      return `${fecha.getMonth() + 1}-${fecha.getDate()}`;
+    }
+
+    /** Indica si la fecha es festivo oficial en Colombia (2026). */
+    function esFestivo(fecha) {
+      return Object.prototype.hasOwnProperty.call(FESTIVOS_2026, claveDe(fecha));
+    }
+
+    /** Formatea una fecha como "Lunes 27 de Julio de 2026". */
+    function formatearFechaLarga(fecha) {
+      return `${DIAS_SEMANA[fecha.getDay()]} ${fecha.getDate()} de ` +
+             `${MESES[fecha.getMonth()]} de ${fecha.getFullYear()}`;
+    }
+
+    /* =========================================================================
+       ALGORITMO DE ASIGNACIÓN DE ENSAYOS
+       -------------------------------------------------------------------------
+       Genera todos los lunes entre el 27-jul-2026 y el 31-dic-2026 y alterna
+       los grupos automáticamente. Nada se escribe a mano.
+       ========================================================================= */
+
+    /**
+     * Construye el mapa de ensayos { 'M-D': GRUPO }.
+     * Reglas:
+     *  - Comienza el lunes 6 de julio de 2026 con NUEVO PACTO
+     *    (el 13 de julio ensaya CANOA y así se alterna en adelante).
+     *  - Un lunes festivo se omite y el turno pasa al siguiente lunes.
+     *  - Excepción: si el lunes anterior también fue festivo (dos seguidos),
+     *    este festivo SÍ recibe el ensayo del grupo en turno.
+     */
+    function generarEnsayos() {
+      const ensayos = {};
+      const rotacion = [GRUPOS.PACTO, GRUPOS.CANOA];
+
+      let lunes = new Date(ANIO, 6, 6);        // Lunes 6 de julio de 2026
+      let turno = 0;                            // 0 → NUEVO PACTO, 1 → CANOA
+      let lunesAnteriorFestivo = false;
+
+      while (lunes.getFullYear() === ANIO) {
+        const festivo = esFestivo(lunes);
+
+        if (!festivo || lunesAnteriorFestivo) {
+          // Lunes hábil, o segundo festivo consecutivo: se asigna el turno.
+          ensayos[claveDe(lunes)] = rotacion[turno];
+          turno = 1 - turno;                    // Alterna el grupo
+        }
+        // Festivo aislado: no consume turno; pasa al siguiente lunes.
+
+        lunesAnteriorFestivo = festivo;
+        lunes = new Date(lunes.getFullYear(), lunes.getMonth(), lunes.getDate() + 7);
+      }
+
+      return ensayos;
+    }
+
+    const ENSAYOS = generarEnsayos();
+
+    /* =========================================================================
+       ESTADO Y REFERENCIAS AL DOM
+       ========================================================================= */
+
+    const refs = {
+      grilla:      document.getElementById('grilla'),
+      nombreMes:   document.getElementById('nombreMes'),
+      nombreMesTexto: document.getElementById('nombreMesTexto'),
+      selectorMeses:  document.getElementById('selectorMeses'),
+      btnAnterior: document.getElementById('btnAnterior'),
+      btnSiguiente:document.getElementById('btnSiguiente'),
+      modalFondo:  document.getElementById('modalFondo'),
+      modal:       document.getElementById('modal'),
+      modalIcono:  document.getElementById('modalIcono'),
+      modalTitulo: document.getElementById('modalTitulo'),
+      modalTexto:  document.getElementById('modalTexto'),
+      modalFecha:  document.getElementById('modalFecha'),
+      modalCerrar: document.getElementById('modalCerrar')
+    };
+
+    /** Mes visible (0 = enero … 11 = diciembre). Solo se navega dentro de 2026. */
+    let mesActual = mesInicial();
+
+    /** Si el dispositivo está en 2026 (jul-dic) abre el mes actual;
+        en cualquier otro caso abre julio, primer mes con programación. */
+    function mesInicial() {
+      const hoy = new Date();
+      return (hoy.getFullYear() === ANIO && hoy.getMonth() >= MES_MINIMO)
+        ? hoy.getMonth()
+        : MES_MINIMO;
+    }
+
+    /* =========================================================================
+       RENDERIZADO DEL CALENDARIO
+       ========================================================================= */
+
+    /**
+     * Pinta el mes indicado.
+     * @param {number} mes       Índice del mes (0-11).
+     * @param {string} direccion 'derecha' | 'izquierda' | '' (animación).
+     */
+    function renderizarMes(mes, direccion = '') {
+      refs.nombreMesTexto.textContent = MESES[mes];
+      marcarMesActivo(mes);
+      refs.btnAnterior.disabled  = mes === MES_MINIMO; // Solo julio-diciembre
+      refs.btnSiguiente.disabled = mes === 11;
+
+      const fragmento = document.createDocumentFragment();
+      const hoy = new Date();
+
+      // Desplazamiento inicial: semana que empieza en LUNES.
+      // getDay(): 0=Dom … 6=Sáb  →  (getDay()+6)%7: 0=Lun … 6=Dom.
+      const primerDia = new Date(ANIO, mes, 1);
+      const desplazamiento = (primerDia.getDay() + 6) % 7;
+
+      for (let i = 0; i < desplazamiento; i++) {
+        const vacio = document.createElement('span');
+        vacio.className = 'dia dia--vacio';
+        fragmento.appendChild(vacio);
+      }
+
+      const totalDias = new Date(ANIO, mes + 1, 0).getDate();
+
+      for (let dia = 1; dia <= totalDias; dia++) {
+        const fecha = new Date(ANIO, mes, dia);
+        fragmento.appendChild(crearCelda(fecha, hoy));
+      }
+
+      // Reemplaza el contenido y relanza la animación de entrada.
+      refs.grilla.innerHTML = '';
+      refs.grilla.appendChild(fragmento);
+      refs.grilla.classList.remove('anim-derecha', 'anim-izquierda');
+      if (direccion) {
+        void refs.grilla.offsetWidth;            // Reinicia la animación CSS
+        refs.grilla.classList.add(direccion === 'derecha' ? 'anim-derecha' : 'anim-izquierda');
+      }
+    }
+
+    /** Crea la celda de un día concreto con sus clases y eventos. */
+    function crearCelda(fecha, hoy) {
+      const celda = document.createElement('span');
+      celda.className = 'dia';
+      celda.textContent = fecha.getDate();
+
+      const festivo = esFestivo(fecha);
+      const grupo   = ENSAYOS[claveDe(fecha)];
+
+      // Día actual del dispositivo (solo aplica dentro de 2026).
+      if (hoy.getFullYear() === ANIO &&
+          hoy.getMonth() === fecha.getMonth() &&
+          hoy.getDate() === fecha.getDate()) {
+        celda.classList.add('dia--hoy');
+      }
+
+      if (festivo) {
+        // Los festivos siempre tienen prioridad visual (fondo rojo).
+        celda.classList.add('dia--festivo');
+        celda.title = FESTIVOS_2026[claveDe(fecha)];
+
+        if (grupo) {
+          // Caso excepcional (dos festivos seguidos): también hay ensayo.
+          celda.classList.add('dia--con-ensayo');
+          celda.style.setProperty('--punto-grupo', grupo.colorPunto);
+          activarEnsayo(celda, fecha, grupo);
+        } else {
+          // Festivo normal: al pulsarlo se muestra el modal informativo.
+          activarFestivo(celda, fecha);
+        }
+      } else if (grupo) {
+        // Lunes de ensayo normal.
+        celda.classList.add(grupo.claseDia);
+        activarEnsayo(celda, fecha, grupo);
+      }
+
+      return celda;
+    }
+
+    /** Hace la celda interactiva y accesible, y le asocia una acción. */
+    function hacerInteractiva(celda, etiqueta, accion) {
+      celda.setAttribute('role', 'button');
+      celda.setAttribute('tabindex', '0');
+      celda.setAttribute('aria-label', etiqueta);
+
+      celda.addEventListener('click', accion);
+      celda.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          accion();
+        }
+      });
+    }
+
+    /** Conecta un lunes de ensayo con el modal de su grupo. */
+    function activarEnsayo(celda, fecha, grupo) {
+      hacerInteractiva(
+        celda,
+        `${grupo.nombre} — ensayo el ${formatearFechaLarga(fecha)}`,
+        () => abrirModalGrupo(grupo, fecha)
+      );
+    }
+
+    /** Conecta un festivo con el modal informativo. */
+    function activarFestivo(celda, fecha) {
+      hacerInteractiva(
+        celda,
+        `Festivo colombiano — ${FESTIVOS_2026[claveDe(fecha)]}, ${formatearFechaLarga(fecha)}`,
+        () => abrirModalFestivo(fecha)
+      );
+    }
+
+    /* =========================================================================
+       NAVEGACIÓN ENTRE MESES (solo dentro de 2026)
+       ========================================================================= */
+
+    function irMesAnterior() {
+      if (mesActual > MES_MINIMO) {
+        mesActual--;
+        renderizarMes(mesActual, 'izquierda');
+      }
+    }
+
+    function irMesSiguiente() {
+      if (mesActual < 11) {
+        mesActual++;
+        renderizarMes(mesActual, 'derecha');
+      }
+    }
+
+    refs.btnAnterior.addEventListener('click', irMesAnterior);
+    refs.btnSiguiente.addEventListener('click', irMesSiguiente);
+
+    /* =========================================================================
+       SELECTOR DESPLEGABLE DE MESES
+       Al pulsar el nombre del mes se despliega la lista completa de los
+       12 meses de 2026 para saltar directamente a cualquiera de ellos.
+       ========================================================================= */
+
+    /** Construye (una sola vez) las opciones del selector (julio-diciembre). */
+    function construirSelectorMeses() {
+      MESES.forEach((nombre, indice) => {
+        if (indice < MES_MINIMO) return;         // Solo desde julio
+        const opcion = document.createElement('button');
+        opcion.className = 'selector-meses__opcion';
+        opcion.textContent = nombre.slice(0, 3);   // Ene, Feb, Mar…
+        opcion.title = nombre;
+        opcion.setAttribute('role', 'option');
+        opcion.dataset.mes = indice;
+
+        opcion.addEventListener('click', () => {
+          if (indice !== mesActual) {
+            // La animación respeta la dirección del salto.
+            const direccion = indice > mesActual ? 'derecha' : 'izquierda';
+            mesActual = indice;
+            renderizarMes(mesActual, direccion);
+          }
+          cerrarSelectorMeses();
+        });
+
+        refs.selectorMeses.appendChild(opcion);
+      });
+    }
+
+    /** Resalta en el selector el mes visible actualmente. */
+    function marcarMesActivo(mes) {
+      refs.selectorMeses.querySelectorAll('.selector-meses__opcion')
+        .forEach((op) => {
+          const activo = Number(op.dataset.mes) === mes;
+          op.classList.toggle('activo', activo);
+          op.setAttribute('aria-selected', activo);
+        });
+    }
+
+    function abrirSelectorMeses() {
+      refs.selectorMeses.classList.add('visible');
+      refs.nombreMes.setAttribute('aria-expanded', 'true');
+    }
+
+    function cerrarSelectorMeses() {
+      refs.selectorMeses.classList.remove('visible');
+      refs.nombreMes.setAttribute('aria-expanded', 'false');
+    }
+
+    function alternarSelectorMeses() {
+      refs.selectorMeses.classList.contains('visible')
+        ? cerrarSelectorMeses()
+        : abrirSelectorMeses();
+    }
+
+    refs.nombreMes.addEventListener('click', (e) => {
+      e.stopPropagation();
+      alternarSelectorMeses();
+    });
+
+    // Se cierra al tocar en cualquier otra parte de la pantalla.
+    document.addEventListener('click', (e) => {
+      if (!refs.selectorMeses.contains(e.target)) cerrarSelectorMeses();
+    });
+
+    /* =========================================================================
+       MODAL
+       ========================================================================= */
+
+    /** Muestra el modal aplicando tema, icono, título, texto y fecha. */
+    function mostrarModal(claseTema, icono, titulo, texto, fecha) {
+      refs.modal.classList.remove('modal--canoa', 'modal--pacto', 'modal--festivo');
+      refs.modal.classList.add(claseTema);
+
+      refs.modalIcono.innerHTML    = icono;
+      refs.modalTitulo.textContent = titulo;
+      refs.modalTexto.textContent  = texto;
+      refs.modalFecha.textContent  = formatearFechaLarga(fecha);
+
+      refs.modalFondo.classList.add('visible');
+      refs.modalCerrar.focus();
+    }
+
+    /** Modal de un lunes de ensayo (identidad visual del grupo). */
+    function abrirModalGrupo(grupo, fecha) {
+      mostrarModal(grupo.claseModal, grupo.icono, grupo.nombre,
+        'Ensayo programado para este día.', fecha);
+    }
+
+    /** Modal informativo de un festivo colombiano. */
+    function abrirModalFestivo(fecha) {
+      mostrarModal('modal--festivo', '🎉', FESTIVOS_2026[claveDe(fecha)],
+        'Festivo colombiano. No hay ensayo programado.', fecha);
+    }
+
+    function cerrarModal() {
+      refs.modalFondo.classList.remove('visible');
+    }
+
+    refs.modalCerrar.addEventListener('click', cerrarModal);
+
+    // Cierra al tocar el fondo oscuro (no el contenido del modal).
+    refs.modalFondo.addEventListener('click', (e) => {
+      if (e.target === refs.modalFondo) cerrarModal();
+    });
+
+    // La tecla Escape cierra el modal y el selector de meses.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        cerrarModal();
+        cerrarSelectorMeses();
+      }
+    });
+
+    /* =========================================================================
+       ARRANQUE
+       ========================================================================= */
+    construirSelectorMeses();
+    renderizarMes(mesActual);
+  </script>
+</body>
+</html>
