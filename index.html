@@ -629,6 +629,7 @@
       '6-8':   'Corpus Christi',
       '6-15':  'Sagrado Corazón de Jesús',
       '6-29':  'San Pedro y San Pablo',
+      '7-13':  'Día festivo',
       '7-20':  'Día de la Independencia',
       '8-7':   'Batalla de Boyacá',
       '8-17':  'Asunción de la Virgen',
@@ -716,11 +717,11 @@
     /**
      * Construye el mapa de ensayos { 'M-D': GRUPO }.
      * Reglas:
-     *  - Comienza el lunes 6 de julio de 2026 con NUEVO PACTO
-     *    (el 13 de julio ensaya CANOA y así se alterna en adelante).
+     *  - Comienza el lunes 6 de julio de 2026 con NUEVO PACTO.
      *  - Un lunes festivo se omite y el turno pasa al siguiente lunes.
-     *  - Excepción: si el lunes anterior también fue festivo (dos seguidos),
-     *    este festivo SÍ recibe el ensayo del grupo en turno.
+     *  - Excepción: si hay DOS lunes festivos seguidos, el ensayo del grupo
+     *    en turno se traslada al MARTES siguiente al segundo festivo
+     *    (ej. 2026: lunes 13 y 20 de julio festivos -> ensayo martes 21).
      */
     function generarEnsayos() {
       const ensayos = {};
@@ -733,10 +734,16 @@
       while (lunes.getFullYear() === ANIO) {
         const festivo = esFestivo(lunes);
 
-        if (!festivo || lunesAnteriorFestivo) {
-          // Lunes hábil, o segundo festivo consecutivo: se asigna el turno.
+        if (!festivo) {
+          // Lunes hábil: se asigna el turno normalmente.
           ensayos[claveDe(lunes)] = rotacion[turno];
           turno = 1 - turno;                    // Alterna el grupo
+        } else if (lunesAnteriorFestivo) {
+          // Segundo lunes festivo consecutivo: el ensayo se traslada al
+          // martes siguiente (día después del festivo).
+          const martes = new Date(lunes.getFullYear(), lunes.getMonth(), lunes.getDate() + 1);
+          ensayos[claveDe(martes)] = rotacion[turno];
+          turno = 1 - turno;
         }
         // Festivo aislado: no consume turno; pasa al siguiente lunes.
 
