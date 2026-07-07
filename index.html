@@ -240,6 +240,35 @@
     .leyenda__punto--pacto   { background: var(--color-pacto); }
     .leyenda__punto--festivo { background: var(--color-festivo); }
 
+    /* Los grupos de la leyenda son botones: filtran el calendario por grupo.
+       Pulsar de nuevo el grupo activo quita el filtro. */
+    .leyenda__item--boton {
+      --tinte: var(--color-borde);
+      border: none;
+      background: none;
+      font: inherit;
+      color: inherit;
+      padding: 6px 10px;
+      margin: -6px -4px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background var(--transicion), box-shadow var(--transicion),
+                  transform var(--transicion);
+    }
+
+    .leyenda__item--boton[data-grupo="canoa"] { --tinte: var(--color-canoa); }
+    .leyenda__item--boton[data-grupo="pacto"] { --tinte: var(--color-pacto); }
+
+    .leyenda__item--boton:hover { background: #f6f6f6; }
+    .leyenda__item--boton:active { transform: scale(.96); }
+
+    /* Filtro activo: fondo tenue y borde del color del grupo */
+    .leyenda__item--boton.activo {
+      background: color-mix(in srgb, var(--tinte) 14%, white);
+      box-shadow: inset 0 0 0 1.5px var(--tinte);
+      color: var(--color-texto);
+    }
+
     /* ==========================================================================
        CALENDARIO
        ========================================================================== */
@@ -311,6 +340,9 @@
 
     .dia--festivo:hover { transform: translateY(-2px); box-shadow: var(--sombra-suave); }
     .dia--festivo:active { transform: scale(.92); }
+
+    /* Día de ensayo oculto por el filtro de grupo: se atenúa y no es pulsable */
+    .dia--filtrado { color: var(--color-texto-sec); opacity: .35; }
 
     /* Ensayo Grupo Canoa: morado, texto blanco */
     .dia--canoa {
@@ -519,12 +551,14 @@
 
     <!-- ================== LEYENDA (al final del calendario) =============== -->
     <section class="leyenda" aria-label="Leyenda de colores">
-      <span class="leyenda__item">
+      <button class="leyenda__item leyenda__item--boton" data-grupo="canoa"
+              aria-pressed="false" title="Filtrar ensayos del Grupo Canoa">
         <span class="leyenda__punto leyenda__punto--canoa"></span> Grupo Canoa
-      </span>
-      <span class="leyenda__item">
+      </button>
+      <button class="leyenda__item leyenda__item--boton" data-grupo="pacto"
+              aria-pressed="false" title="Filtrar ensayos del Grupo Nuevo Pacto">
         <span class="leyenda__punto leyenda__punto--pacto"></span> Grupo Nuevo Pacto
-      </span>
+      </button>
       <span class="leyenda__item">
         <span class="leyenda__punto leyenda__punto--festivo"></span> Festivo
       </span>
@@ -738,6 +772,9 @@
     /** Mes visible (0 = enero … 11 = diciembre). Solo se navega dentro de 2026. */
     let mesActual = mesInicial();
 
+    /** Filtro activo desde la leyenda: 'canoa' | 'pacto' | null (sin filtro). */
+    let filtroGrupo = null;
+
     /** Si el dispositivo está en 2026 (jul-dic) abre el mes actual;
         en cualquier otro caso abre julio, primer mes con programación. */
     function mesInicial() {
@@ -809,12 +846,15 @@
         celda.classList.add('dia--hoy');
       }
 
+      // ¿El grupo del día es visible con el filtro actual?
+      const grupoVisible = grupo && (!filtroGrupo || grupo.id === filtroGrupo);
+
       if (festivo) {
-        // Los festivos siempre tienen prioridad visual (fondo rojo).
+        // Los festivos siempre tienen prioridad visual y nunca se filtran.
         celda.classList.add('dia--festivo');
         celda.title = FESTIVOS_2026[claveDe(fecha)];
 
-        if (grupo) {
+        if (grupoVisible) {
           // Caso excepcional (dos festivos seguidos): también hay ensayo.
           celda.classList.add('dia--con-ensayo');
           celda.style.setProperty('--punto-grupo', grupo.colorPunto);
@@ -824,9 +864,14 @@
           activarFestivo(celda, fecha);
         }
       } else if (grupo) {
-        // Lunes de ensayo normal.
-        celda.classList.add(grupo.claseDia);
-        activarEnsayo(celda, fecha, grupo);
+        if (grupoVisible) {
+          // Lunes de ensayo normal.
+          celda.classList.add(grupo.claseDia);
+          activarEnsayo(celda, fecha, grupo);
+        } else {
+          // Oculto por el filtro: se muestra atenuado y sin interacción.
+          celda.classList.add('dia--filtrado');
+        }
       }
 
       return celda;
@@ -1000,6 +1045,30 @@
         cerrarModal();
         cerrarSelectorMeses();
       }
+    });
+
+    /* =========================================================================
+       FILTRO POR GRUPO DESDE LA LEYENDA
+       Pulsar un grupo resalta solo sus ensayos (los festivos siempre se ven).
+       Pulsar de nuevo el mismo grupo quita el filtro.
+       ========================================================================= */
+
+    const botonesFiltro = document.querySelectorAll('.leyenda__item--boton');
+
+    function alternarFiltro(idGrupo) {
+      filtroGrupo = (filtroGrupo === idGrupo) ? null : idGrupo;
+
+      botonesFiltro.forEach((boton) => {
+        const activo = boton.dataset.grupo === filtroGrupo;
+        boton.classList.toggle('activo', activo);
+        boton.setAttribute('aria-pressed', activo);
+      });
+
+      renderizarMes(mesActual);   // Redibuja el mes con el filtro aplicado
+    }
+
+    botonesFiltro.forEach((boton) => {
+      boton.addEventListener('click', () => alternarFiltro(boton.dataset.grupo));
     });
 
     /* =========================================================================
